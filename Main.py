@@ -1,3 +1,7 @@
-print("Testing")
-print("TEST TES TEST")
-print("TEST TES TEST TEST")
+import PyQt5
+
+# L = { w element of {a,b}* / w  starts with aa}
+#L = { w element of {a,b}* / w  starts and ends with aa}
+#L = { w element of {a,b}* / w  length of w is divisible by 3}
+#L = { w element of {a,b}* / # of a in w is divisible by 3}
+#L = { w element of {a,b}* / the fourth symbol in }
