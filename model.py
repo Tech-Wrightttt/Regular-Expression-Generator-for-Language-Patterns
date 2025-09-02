@@ -107,9 +107,32 @@ class LengthGreaterThanStrategy(RegexStrategy):
 
 class LengthLessThanStrategy(RegexStrategy):
     def generate_regex(self, N):
-        # Create union of all lengths from 0 to N-1
-        parts = ["ε"] + [f"(a+b)^{{{i}}}" for i in range(1, N)]
-        return " + ".join(parts)
+        if N <= 0:
+            return "∅"  # No strings have length less than 0
+
+        # Create union of all lengths from 0 to N-1 using formal syntax
+        parts = ["ε"]  # Empty string
+
+        # For each length from 1 to N-1, create the formal expression
+        for i in range(1, N):
+            # For strings of length i: all combinations of a and b of length i
+            # This is equivalent to (a+b) concatenated i times
+
+            if i == 1:
+                part = "((a)+(b))"
+            else:
+                # Build (a+b) • (a+b) • ... • (a+b) (i times)
+                part = "((a)+(b))"
+                for _ in range(1, i):
+                    part = f"{part}•((a)+(b))"
+
+            parts.append(part)
+
+        # Join all parts with union operator +
+        if len(parts) == 1:
+            return parts[0]
+        else:
+            return " + ".join(f"({part})" for part in parts)
 
     def get_description(self, N):
         return f"has length less than {N}"
@@ -125,9 +148,32 @@ class LengthGreaterThanOrEqualStrategy(RegexStrategy):
 
 class LengthLessThanOrEqualStrategy(RegexStrategy):
     def generate_regex(self, N):
-        # Create union of all lengths from 0 to N
-        parts = ["ε"] + [f"(a+b)^{{{i}}}" for i in range(1, N + 1)]
-        return " + ".join(parts)
+        if N < 0:
+            return "∅"  # No strings have length less than or equal to a negative number
+
+        # Create union of all lengths from 0 to N using formal syntax
+        parts = ["ε"]  # Empty string
+
+        # For each length from 1 to N, create the formal expression
+        for i in range(1, N + 1):
+            # For strings of length i: all combinations of a and b of length i
+            # This is equivalent to (a+b) concatenated i times
+
+            if i == 1:
+                part = "((a)+(b))"
+            else:
+                # Build (a+b) • (a+b) • ... • (a+b) (i times)
+                part = "((a)+(b))"
+                for _ in range(1, i):
+                    part = f"{part}•((a)+(b))"
+
+            parts.append(part)
+
+        # Join all parts with union operator +
+        if len(parts) == 1:
+            return parts[0]
+        else:
+            return " + ".join(f"({part})" for part in parts)
 
     def get_description(self, N):
         return f"has length less than or equal to {N}"
@@ -143,11 +189,36 @@ class LengthEqualStrategy(RegexStrategy):
 
 class CountDivisibleByStrategy(RegexStrategy):
     def generate_regex(self, pattern, N):
-        # This is complex - simplified representation
-        return f"( (a+b)*{pattern}(a+b)* ) where count of '{pattern}' is divisible by {N}"
+        if N <= 0:
+            return "∅"  # Divisible by 0 or negative numbers is undefined
+
+        # For the general case, generating a regular expression for
+        # "number of occurrences of P is divisible by N" is complex
+        # and requires building a finite automaton with N states
+
+        # We can only handle very simple cases directly
+        if pattern in ["a", "b"] and N == 1:
+            # Any number of the pattern (divisible by 1)
+            other_char = "b" if pattern == "a" else "a"
+            return f"(({other_char})*•({pattern})•({other_char})*)*"
+
+        elif pattern in ["a", "b"] and N == 2:
+            # Even number of the pattern
+            other_char = "b" if pattern == "a" else "a"
+            return f"(({other_char})*•({pattern})•({other_char})*•({pattern})•({other_char})*)*"
+
+        else:
+            # For more complex cases, we cannot easily express this
+            # as a simple regular expression using basic operations
+            raise ValueError(f"Cannot generate a regular expression for 'count of {pattern} divisible by {N}' " +
+                             "using only the basic operations (•, +, *). " +
+                             "This would require building a finite automaton with {N} states.")
 
     def get_description(self, pattern, N):
-        return f"has count of '{pattern}' divisible by {N}"
+        if N == 1:
+            return f"has any number of '{pattern}' (count divisible by 1)"
+        else:
+            return f"has count of '{pattern}' divisible by {N}"
 
 
 class NthSymbolIsStrategy(RegexStrategy):
@@ -174,43 +245,87 @@ class NthSymbolFromLastIsStrategy(RegexStrategy):
 
 class ContainsAndStartsWithStrategy(RegexStrategy):
     def generate_regex(self, pattern):
-        return f"{pattern}(a+b)*"
+        # Convert the pattern to proper regular expression syntax
+        if len(pattern) == 0:
+            return "∅"  # Empty pattern case
+
+        # Convert each character in the pattern to the formal representation
+        pattern_expr = f"({pattern[0]})"
+        for char in pattern[1:]:
+            pattern_expr = f"{pattern_expr}•({char})"
+
+        # For strings that start with P and contain P
+        # Since it starts with P, it automatically contains P
+        # So we just need: P • (any combination of a and b)*
+
+        # Represent (a+b)* in formal syntax as ((a)+(b))*
+        any_string = "((a)+(b))*"
+
+        # Return the complete formal regular expression
+        return f"{pattern_expr}•{any_string}"
 
     def get_description(self, pattern):
-        return f"contains '{pattern}' and starts with '{pattern}'"
+        return f"contains '{pattern}' and starts with '{pattern}' (starting with P implies containing P)"
 
 
 class ContainsAndEndsWithStrategy(RegexStrategy):
     def generate_regex(self, pattern):
-        return f"(a+b)*{pattern}"
+        # Convert the pattern to proper regular expression syntax
+        if len(pattern) == 0:
+            return "∅"  # Empty pattern case
+
+        # Convert each character in the pattern to the formal representation
+        pattern_expr = f"({pattern[0]})"
+        for char in pattern[1:]:
+            pattern_expr = f"{pattern_expr}•({char})"
+
+        # For strings that end with P and contain P
+        # Since it ends with P, it automatically contains P
+        # So we just need: (any combination of a and b)* • P
+
+        # Represent (a+b)* in formal syntax as ((a)+(b))*
+        any_string = "((a)+(b))*"
+
+        # Return the complete formal regular expression
+        return f"{any_string}•{pattern_expr}"
 
     def get_description(self, pattern):
-        return f"contains '{pattern}' and ends with '{pattern}'"
+        return f"contains '{pattern}' and ends with '{pattern}' (ending with P implies containing P)"
 
 
 class ContainsStartsAndEndsWithStrategy(RegexStrategy):
     def generate_regex(self, pattern):
-        # Use the same logic as starts and ends with P
-        overlap_possible = False
-        overlap_length = 0
+        # For strings that:
+        # 1. Start with the first character of P
+        # 2. End with the last character of P
+        # 3. Contain the full pattern P somewhere
 
-        for i in range(1, len(pattern)):
-            if pattern.endswith(pattern[:i]):
-                overlap_possible = True
-                overlap_length = i
-                break
+        if len(pattern) == 0:
+            return "∅"  # Empty pattern case
 
-        if overlap_possible and len(pattern) > 0:
-            middle_pattern = pattern[overlap_length:]
-            if middle_pattern:
-                return f"{pattern}({middle_pattern})*"
-            else:
-                return f"{pattern}({pattern})*"
-        else:
-            return f"{pattern}(a+b)*{pattern}"
+        # Convert the full pattern to formal syntax
+        full_pattern_expr = f"({pattern[0]})"
+        for char in pattern[1:]:
+            full_pattern_expr = f"{full_pattern_expr}•({char})"
+
+        # Get the first and last characters
+        start_char = pattern[0]
+        end_char = pattern[-1]
+
+        # Represent (a+b)* in formal syntax as ((a)+(b))*
+        any_string = "((a)+(b))*"
+
+        # The regular expression is:
+        # start_char • (any_string) • full_pattern • (any_string) • end_char
+        return f"({start_char})•{any_string}•{full_pattern_expr}•{any_string}•({end_char})"
 
     def get_description(self, pattern):
-        return f"contains '{pattern}', starts with '{pattern}', and ends with '{pattern}'"
+        if len(pattern) == 0:
+            return "empty pattern"
+        elif len(pattern) == 1:
+            return f"contains '{pattern}', starts with '{pattern}', and ends with '{pattern}'"
+        else:
+            return f"contains '{pattern}', starts with '{pattern[0]}', and ends with '{pattern[-1]}'"
 
 
 class RegexModel:
