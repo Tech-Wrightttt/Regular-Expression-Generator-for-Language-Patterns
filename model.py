@@ -32,24 +32,7 @@ class EndsWithStrategy(RegexStrategy):
 
 class StartsAndEndsWithStrategy(RegexStrategy):
     def generate_regex(self, pattern):
-        # Handle overlapping patterns
-        overlap_possible = False
-        overlap_length = 0
-
-        for i in range(1, len(pattern)):
-            if pattern.endswith(pattern[:i]):
-                overlap_possible = True
-                overlap_length = i
-                break
-
-        if overlap_possible and len(pattern) > 0:
-            middle_pattern = pattern[overlap_length:]
-            if middle_pattern:
-                return f"{pattern}({middle_pattern})*"
-            else:
-                return f"{pattern}({pattern})*"
-        else:
-            return f"{pattern}(a+b)*{pattern}"
+        return f"{pattern}(a+b)*{pattern}"
 
     def get_description(self, pattern):
         return f"starts and ends with '{pattern}'"

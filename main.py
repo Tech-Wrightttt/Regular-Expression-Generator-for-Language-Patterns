@@ -1,4 +1,8 @@
+import os
 import sys
+from pathlib import Path
+
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from controller import RegexController
 from view import RegexView
@@ -7,6 +11,7 @@ from model import RegexModel
 
 def main():
     app = QApplication(sys.argv)
+
 
     # Create MVC components
     model = RegexModel()

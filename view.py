@@ -2,13 +2,14 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QLineEdit, QTextEdit, QPushButton,
                              QGroupBox, QComboBox, QSpinBox, QStackedWidget)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 
 
 class RegexView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.setWindowIcon(QIcon("2bLogo.jpg"))
 
     def initUI(self):
         self.setWindowTitle('Advanced Regular Expression Generator')
