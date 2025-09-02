@@ -48,20 +48,53 @@ class ContainsStrategy(RegexStrategy):
 
 class DoesNotContainStrategy(RegexStrategy):
     def generate_regex(self, pattern):
-        if pattern == "aa":
-            return "b*(ab*)*"
+        # For simple patterns, we can construct a proper regular expression
+        # For complex patterns, this becomes much more difficult
+
+        if len(pattern) == 1:
+            # For single character patterns like "a" or "b"
+            other_char = 'b' if pattern == 'a' else 'a'
+            return f"({other_char})*"
+
+        elif pattern == "aa":
+            # Strings with no consecutive a's: b*(ab*)*
+            return f"((b)* • ((a) • (b)*))*"
+
         elif pattern == "bb":
-            return "a*(ba*)*"
+            # Strings with no consecutive b's: a*(ba*)*
+            return f"((a)* • ((b) • (a)*))*"
+
+        elif pattern == "ab":
+            # Strings that don't contain "ab"
+            # This would be strings of all a's followed by all b's, but not mixed
+            return f"(a)* + (b)*"
+
+        elif pattern == "ba":
+            # Strings that don't contain "ba"
+            # This would be strings of all b's followed by all a's, but not mixed
+            return f"(b)* + (a)*"
+
         else:
-            return f"(a+b)* without '{pattern}'"
+            # For more complex patterns, we cannot easily express "does not contain P"
+            # as a simple regular expression using the basic operations
+            # This would typically require complementation, which is not a primitive operation
+            # in the definition of regular expressions
+            raise ValueError(f"Cannot generate a regular expression for 'does not contain {pattern}' " +
+                             "using only the basic operations (•, +, *)")
 
     def get_description(self, pattern):
-        if pattern == "aa":
+        if len(pattern) == 1:
+            return f"does not contain '{pattern}'"
+        elif pattern == "aa":
             return "does not contain 'aa' (no consecutive a's)"
         elif pattern == "bb":
             return "does not contain 'bb' (no consecutive b's)"
+        elif pattern == "ab":
+            return "does not contain 'ab' (all a's followed by all b's, or only a's, or only b's)"
+        elif pattern == "ba":
+            return "does not contain 'ba' (all b's followed by all a's, or only a's, or only b's)"
         else:
-            return f"does not contain '{pattern}'"
+            return f"does not contain '{pattern}' (complex pattern - no simple regex available)"
 
 
 class LengthGreaterThanStrategy(RegexStrategy):

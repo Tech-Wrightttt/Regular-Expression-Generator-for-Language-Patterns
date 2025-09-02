@@ -12,7 +12,6 @@ from model import RegexModel
 def main():
     app = QApplication(sys.argv)
 
-
     # Create MVC components
     model = RegexModel()
     view = RegexView()
